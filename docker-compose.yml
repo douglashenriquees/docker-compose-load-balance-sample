@@ -1,0 +1,69 @@
+version: '3.8'
+
+networks:
+  frontend:
+  backend:
+
+
+services:
+  mysql:
+    image: mysql:5.7
+    platform: linux/x86_64
+    volumes:
+      - ./volume-mysql:/var/lib/mysql
+      - ./_mysql_init:/docker-entrypoint-initdb.d
+    networks:
+      - backend
+    environment:
+      - MYSQL_ROOT_PASSWORD=strongpass
+      - bind-address=0.0.0.0
+
+  app-1:
+    image: douglashenriquees/mvc-produtos:3.0
+    networks:
+      - backend
+      - frontend
+    expose:
+      - 80
+    environment:
+      - DBHOST=mysql
+    depends_on:
+      - mysql
+
+  app-2:
+    image: douglashenriquees/mvc-produtos:3.0
+    networks:
+      - backend
+      - frontend
+    expose:
+      - 80
+    environment:
+      - DBHOST=mysql
+    depends_on:
+      - mysql
+
+  app-3:
+    image: douglashenriquees/mvc-produtos:3.0
+    networks:
+      - backend
+      - frontend
+    expose:
+      - 80
+    environment:
+      - DBHOST=mysql
+    depends_on:
+      - mysql
+
+  haproxy:
+    image: haproxy:1.7.0
+    platform: linux/x86_64
+    volumes:
+      - ./haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg
+    networks:
+      - frontend
+    depends_on:
+      - app-1
+      - app-2
+      - app-3
+    ports:
+      - 8800:80
